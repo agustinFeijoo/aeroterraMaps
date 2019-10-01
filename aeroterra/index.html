@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="images/favicon.ico">
+
+    <title>Geosearch Template for Bootstrap</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="geosearch-template.css" rel="stylesheet">
+
+    <!-- Bootstrap-map-js -->
+    <link rel="stylesheet" type="text/css" href="//js.arcgis.com/3.13/esri/css/esri.css">   
+    <link rel="stylesheet" type="text/css" href="src/css/bootstrapmap.css">   
+    <style type="text/css">
+      #mapDiv {
+        min-height: 100%; 
+        max-height: 100%; 
+      }
+
+      .simpleGeocoder {
+        margin-right: 5px;
+      }
+      
+      /* Option 2: Geosearch in nav;
+      .simpleGeocoder .esriGeocoderContainer {
+        width: 180px;
+      }
+      .simpleGeocoder .esriGeocoder input {
+        width: 118px;
+      }
+      @media (max-width: 767px) {
+        .navbar-form .form-group {
+          float: left;
+        }
+        .simpleGeocoder {
+          margin-right: 7px;
+        }
+      }
+      */
+      .crearPuntoDeInteres{
+        background: #ddd;
+        height: 600px;
+        width:  300px;
+        align-content: center;
+        display: block;
+        border-radius:7px;
+        margin:auto;
+
+      }
+      .parametro{
+        padding: 10px;
+        margin: 15px;
+        align-content: center;
+      }
+        
+    </style>
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="../bootstrap_v3/docs-assets/js/html5shiv.js"></script>
+      <script src="../bootstrap_v3/docs-assets/js/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <form class="crearPuntoDeInteres form-group"style="/*display: none;*/">
+      <div class="input-group parametro"><strong>Nombre:</strong> 
+        <input type="text" id="nombre" required placeholder="ej:Av. E. Madero 1020">
+      </div>
+      <div class="input-group parametro"><strong>Dirección:</strong> 
+        <input type="text" id="direccion" required placeholder="ej:Av. E. Madero 1020">
+      </div>
+      <div class="input-group parametro"><strong>Teléfono:</strong> 
+        <input type="text" id="telefono" placeholder="ej: 54 9 11 5272 09000">
+      </div>
+      <div class="input-group parametro" ><strong>Categoría:</strong> 
+        <select id="categoria">
+          <option value="" disabled selected>Seleccionar</option>
+          <option value="comercial">Comercial
+          <option value="residencial">Residencial</option>  
+          <option value="mixta">Mixta</option>
+        </select>
+      </div>
+      <div class="input-group parametro"><strong>Coordenada South:</strong> 
+        <input type="number" id="south" step="0.0000001" placeholder="ej: -34.595986">
+      </div>
+      <div class="input-group parametro"><strong>Coordenada West:</strong> 
+        <input type="number" id="west" step="0.0000001" placeholder="ej:-58.3724715">
+      </div>
+      <button class="button btn-success" id="añadirPunto" style="margin-left:70%;" onclick="">Agregar</button>
+    </form>
+
+
+    <div id="mapa" style="/*display: none;*/">
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          </button>
+          <a class="navbar-brand" href="#">Aeroterra</a>
+        </div>
+        <div class="collapse navbar-collapse">
+        
+          <!--Option 1: Modal-->
+          <ul class="nav navbar-nav">
+            <li><a id="geosearchNav" href="#">Buscar</a></li>
+          </ul>
+          <!--Option 2: Insert in nav bar-->
+          <!-- <form class="navbar-form navbar-right">
+            <div class="form-group">
+              <div id="geosearch"></div>
+            </div>
+            <button id="btnGeosearch" type="submit" class="btn btn-success">Search</button>
+          </form> -->
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+    <div class="modal fade" id="geosearchModal" style="display: none;" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                  <h4 class="modal-title">Buscar</h4>
+                </div>
+                <div class="modal-body">
+                  <form id="geosearch-form">
+                    <div class="form-group">
+                      <div id="geosearch"></div>
+                    </div> 
+                    <button id="btnGeosearch" type="button" class="btn btn-success" data-dismiss="modal"> Ir </button>
+                    <button id="btnClear" type="submit" class="btn btn-default" data-dismiss="modal">Salir</button>
+                  </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+
+    <!-- Bootstrap-map-js -->
+    <div id="mapDiv"></div>
+    </div>
+      <script type="text/javascript">
+        var package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+        var dojoConfig = {
+            //The location.pathname.replace() logic below may look confusing but all its doing is
+            // enabling us to load the api from a CDN and load local modules from the correct location.
+            packages: [{
+                name: "application",
+                location: package_path + '/src/js'
+            }]
+        };
+    </script>
+    <script src="//js.arcgis.com/3.13compact"></script>
+    <script>
+        require(["esri/map",
+          "esri/dijit/Scalebar",
+          "esri/dijit/Geocoder",
+          "esri/InfoTemplate",
+          "esri/graphic",
+          "esri/geometry/Multipoint",
+          "esri/symbols/PictureMarkerSymbol",
+          "esri/dijit/Popup",
+          "dojo/dom",
+          "dojo/on",
+          "application/bootstrapmap",
+          "dojo/domReady!"],
+          function (Map, Scalebar, Geocoder, InfoTemplate, Graphic, Multipoint, PictureMarkerSymbol, Popup, dom, on, BootstrapMap) {
+            "use strict";
+
+            // Get a reference to the ArcGIS Map class
+            var map = BootstrapMap.create("mapDiv", {
+              basemap: "streets",
+              center:[-58.3724715,-34.595986],
+              zoom: 12,
+              scrollWheelZoom: true
+            });
+            var scalebar = new Scalebar({
+              map: map,
+              scalebarUnit: "dual"
+            });
+
+            // Create widget
+            var geocoder = new Geocoder({
+              //value:'Starbucks',
+              value: ""+document.getElementById("south").value+","+document.getElementById("west").value,
+              maxLocations: 10,
+              autoComplete: true,
+              arcgisGeocoder: true,
+              map: map
+            },"geosearch");
+            geocoder.startup();
+            geocoder.on("select", geocodeSelect);
+            geocoder.on("findResults", geocodeResults);
+            geocoder.on("clear", clearFindGraphics);
+
+            // Geosearch functions
+            on(dom.byId("añadirPunto"),"click", añadirPunto);
+            on(dom.byId("btnGeosearch"),"click", geosearch);
+            on(dom.byId("btnClear"),"click", clearFindGraphics);
+
+            map.on("load", function () {
+              map.infoWindow.offsetY = 25;
+              map.infoWindow.set("highlight", false);
+            });
+            
+            function geosearch() {
+              var def = geocoder.find();
+              def.then(function(res){
+                geocodeResults(res);
+              });
+            }
+            function añadirPunto() {
+              
+              var def = geocoder.find();
+          
+              def.then(function(res){
+                ubicacionResultado(res);
+              });
+            }
+
+            function geocodeSelect(item) {
+              var g = (item.graphic ? item.graphic : item.result.feature);
+              g.setSymbol(sym);
+              addPlaceGraphic(item.result,g.symbol);
+            }
+
+            function geocodeResults(places) {
+              places = places.results;
+              if (places.length > 0) {
+                clearFindGraphics();
+                var symbol = sym;
+                // Create and add graphics with pop-ups
+                for (var i = 0; i < places.length; i++) {
+                  addPlaceGraphic(places[i], symbol);
+                }
+                zoomToPlaces(places);
+              } else {
+                alert("Sorry, address or place not found.");
+              }
+            }
+
+            function ubicacionResultado(places) {
+              places = places.results;
+              if (places.length > 0) {
+                clearFindGraphics();
+                var symbol = sym;
+                // Create and add graphics with pop-ups
+                for (var i = 0; i < places.length; i++) {
+                  añadirPuntoDeInteresMapa(places[i], symbol);
+                }
+                zoomToPlaces(places);
+              } else {
+                alert("Sorry, address or place not found.");
+              }
+            }
+            
+            function addPlaceGraphic(item,symbol)  {
+              var place = {};
+              var attributes,infoTemplate,pt,graphic;
+              pt = item.feature.geometry;
+              place.address = item.name;
+
+              
+
+              place.score = item.feature.attributes.Score;
+              // Graphic components
+             // attributes = { address:place.address, score:place.score, lat:pt.getLatitude().toFixed(2), lon:pt.getLongitude().toFixed(2) };   
+             attributes = { address:place.address, lat:pt.getLatitude().toFixed(2), lon:pt.getLongitude().toFixed(2) };   
+              infoTemplate = new InfoTemplate("${address}","Latitud: ${lat}<br/>Altitud: ${lon}<br/>");
+             // infoTemplate = new InfoTemplate("${address}","Latitud: ${lat}<br/>Altitud: ${lon}<br/>Score: ${score}");
+              graphic = new Graphic(pt,symbol,attributes,infoTemplate);
+              // Add to map
+              map.graphics.add(graphic);  
+            }
+
+            function añadirPuntoDeInteresMapa(item,symbol)  {
+              var place = {};
+              var attributes,infoTemplate,pt,graphic;
+              pt = item.feature.geometry;
+              place.address=document.getElementById("nombre").value;
+              place.direccion=document.getElementById("direccion").value;
+              place.telefono=document.getElementById("telefono").value;
+              var select =document.getElementById("categoria");
+              var categoria=select.options[select.selectedIndex].value;
+              place.categoria=categoria;
+              
+              //place.address = item.name;
+
+              
+
+              place.score = item.feature.attributes.Score;
+              // Graphic components
+             // attributes = { address:place.address, score:place.score, lat:pt.getLatitude().toFixed(2), lon:pt.getLongitude().toFixed(2) };   
+             attributes = { address:place.address,telefono:place.telefono,direccion:place.direccion,categoria:place.categoria, lat:pt.getLatitude().toFixed(2), lon:pt.getLongitude().toFixed(2) };   
+              infoTemplate = new InfoTemplate("${address}","Telefono: ${telefono}<br/> Direccion: ${direccion}<br/> Categoria: ${categoria} <br/>Latitud: ${lat}<br/>Altitud: ${lon}<br/>");
+             // infoTemplate = new InfoTemplate("${address}","Latitud: ${lat}<br/>Altitud: ${lon}<br/>Score: ${score}");
+              graphic = new Graphic(pt,symbol,attributes,infoTemplate);
+              // Add to map
+              map.graphics.add(graphic);  
+            }
+
+
+                      
+            function zoomToPlaces(places) {
+              var multiPoint = new Multipoint(map.spatialReference);
+              for (var i = 0; i < places.length; i++) {
+                //multiPoint.addPoint(places[i].location);
+                multiPoint.addPoint(places[i].feature.geometry);
+              }
+              map.setExtent(multiPoint.getExtent().expand(2.0));
+            }
+
+            function clearFindGraphics() {
+              map.infoWindow.hide();
+              map.graphics.clear();
+            }
+
+            function createPictureSymbol(url, xOffset, yOffset, xWidth, yHeight) {
+              return new PictureMarkerSymbol(
+              {
+                  "angle": 0,
+                  "xoffset": xOffset, "yoffset": yOffset, "type": "esriPMS",
+                  "url": url,  
+                  "contentType": "image/png",
+                  "width":xWidth, "height": yHeight
+              });
+            }
+
+            var sym = createPictureSymbol("images/blue-pin.png", 0, 12, 13, 24);
+
+            // Show modal dialog, hide nav
+            $(document).ready(function(){
+              // Close menu
+              $('.nav a').on('click', function(){
+                $(".navbar-toggle").click();
+              });
+              // Geosearch nav menu is selected
+              $("#geosearchNav").click(function(e){
+                $("#geosearchModal").modal("show"); 
+                // Bootstrap work-around
+                $("body").css("margin-right","0px");
+                $(".navbar").css("margin-right","0px");
+              }); 
+            });
+        });
+    </script>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+  </body>
+</html>
